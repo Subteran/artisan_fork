@@ -10,6 +10,7 @@ venv/
 .venv/
 env/
 .env/
+artisan_venv/
 
 # uv
 .uv/

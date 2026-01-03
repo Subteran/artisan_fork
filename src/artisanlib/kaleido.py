@@ -49,7 +49,7 @@ class KaleidoPort:
 
     __slots__ = [ '_asyncLoopThread', '_write_queue', '_running', '_default_data_stream', '_ping_timeout', '_open_timeout', '_init_timeout',
             '_send_timeout', '_read_timeout', '_ping_retry_delay', '_reconnect_delay', 'send_button_timeout', '_single_await_var_prefix',
-            '_state', '_pending_requests', '_logging' ]
+            '_state', '_pending_requests', '_logging', '_serial_enabled' ]
 
     def __init__(self) -> None:
         # internals
@@ -82,6 +82,7 @@ class KaleidoPort:
 
         # configuration
         self._logging = False # if True device communication is logged
+        self._serial_enabled = False
 
     def setLogging(self, b:bool) -> None:
         self._logging = b
@@ -373,7 +374,11 @@ class KaleidoPort:
 
     async def serial_handle_reads(self, reader: asyncio.StreamReader) -> None:
         while self._running:
-            res = await asyncio.wait_for(reader.readline(), timeout=self._read_timeout)
+            try:
+                res = await asyncio.wait_for(reader.readline(), timeout=self._read_timeout)
+            except TimeoutError:
+                # Allow idle connections to stay open when no data is flowing.
+                continue
             message:str = str(res, 'utf-8').strip()
             if self._logging:
                 _log.info('received: %s',message)
@@ -606,6 +611,7 @@ class KaleidoPort:
             # initialize data structures
             self._state = {}
             self._pending_requests = {}
+            self._serial_enabled = serial is not None
 
             _log.debug('start sampling')
             if self._asyncLoopThread is None:
@@ -623,10 +629,14 @@ class KaleidoPort:
         except Exception as e:  # pylint: disable=broad-except
             _log.exception(e)
 
+    def is_running(self) -> bool:
+        return self._running
+
     def stop(self) -> None:
         _log.debug('stop sampling')
-        # send "end safety guard"
-        self.send_request('CL','AR','SN', 2*self._send_timeout, True)
+        # send "end safety guard" (skip for serial/Bluetooth to avoid wedging the OS RFCOMM session)
+        if not self._serial_enabled:
+            self.send_request('CL','AR','SN', 2*self._send_timeout, True)
         self._running = False
         self._asyncLoopThread = None
         self._write_queue = None

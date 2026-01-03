@@ -13281,21 +13281,23 @@ class tgraphcanvas(QObject):
                 elif self.device == 138:
                     # connect Kaleido
                     from artisanlib.kaleido import KaleidoPort
-                    self.aw.kaleido = KaleidoPort()
+                    if self.aw.kaleido is None:
+                        self.aw.kaleido = KaleidoPort()
                     self.aw.kaleido.setLogging(self.device_logging) # ty:ignore[possibly-missing-attribute]
-                    kaleido_serial:SerialSettings|None = None
-                    if self.aw.kaleidoSerial:
-                        kaleido_serial = SerialSettings(
-                                port = self.aw.ser.comport,
-                                baudrate = self.aw.ser.baudrate,
-                                bytesize = self.aw.ser.bytesize,
-                                stopbits = self.aw.ser.stopbits,
-                                parity = self.aw.ser.parity,
-                                timeout = self.aw.ser.timeout)
-                    self.aw.kaleido.start(self.mode, self.aw.kaleidoHost, self.aw.kaleidoPort, # ty:ignore[possibly-missing-attribute]
-                        serial=kaleido_serial,
-                        connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('Kaleido'),True,None),
-                        disconnected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format('Kaleido'),True,None))
+                    if not self.aw.kaleido.is_running(): # ty:ignore[possibly-missing-attribute]
+                        kaleido_serial:SerialSettings|None = None
+                        if self.aw.kaleidoSerial:
+                            kaleido_serial = SerialSettings(
+                                    port = self.aw.ser.comport,
+                                    baudrate = self.aw.ser.baudrate,
+                                    bytesize = self.aw.ser.bytesize,
+                                    stopbits = self.aw.ser.stopbits,
+                                    parity = self.aw.ser.parity,
+                                    timeout = self.aw.ser.timeout)
+                        self.aw.kaleido.start(self.mode, self.aw.kaleidoHost, self.aw.kaleidoPort, # ty:ignore[possibly-missing-attribute]
+                            serial=kaleido_serial,
+                            connected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} connected').format('Kaleido'),True,None),
+                            disconnected_handler=lambda : self.aw.sendmessageSignal.emit(QApplication.translate('Message', '{} disconnected').format('Kaleido'),True,None))
                 elif self.device == 142:
                     try:
                         from artisanlib.ikawa import IKAWA_BLE # ty: ignore[possibly-missing-import]
@@ -13442,8 +13444,9 @@ class tgraphcanvas(QObject):
 
                 # disconnect Kaleido
                 if not bool(self.aw.simulator) and self.device == 138 and self.aw.kaleido is not None:
-                    self.aw.kaleido.stop()
-                    self.aw.kaleido = None
+                    if not self.aw.kaleidoSerial:
+                        self.aw.kaleido.stop()
+                        self.aw.kaleido = None
 
                 # disconnect IKAWA
                 if not bool(self.aw.simulator) and self.device == 142 and self.aw.ikawa is not None:

@@ -241,7 +241,7 @@ enable='''c-extension-no-member,'''
 
 [tool.mypy]
 files = ["artisanlib/*.py", "plus/*.py", "test/**/*.py"]
-exclude = ['build', 'dist', 'uic', 'misc']
+exclude = ['build', 'dist', 'uic', 'misc', '../artisan_venv', 'artisan_venv']
 python_version = "3.12"
 
 # Ensure full coverage
@@ -306,7 +306,7 @@ line-length = 80
 lint.ignore = ["E501", "E741", "E402", "PLR0912", "PLR0913", "PLR0915", "SIM105", "PLR2044", "PLR2004", "PLW0603", "PLR0911", "COM812", "A005"]
 
 # Exclude a variety of commonly ignored directories.
-exclude = ["dist", "build", "proto", ".pytype", ".mypy_cache", ".git", ".venv", ".venv_universal", ".venv_arm"]
+exclude = ["dist", "build", "proto", ".pytype", ".mypy_cache", ".git", ".venv", ".venv_universal", ".venv_arm", "../artisan_venv", "artisan_venv"]
 
 # Assume Python 3.12
 target-version = "py312"
@@ -395,7 +395,7 @@ directory = ".htmlcov"
 ## codespell
 
 [tool.codespell]
-skip = '*.ts,./coverage,./build,./dist*,./htmlcov,./*.spec,*.svg'
+skip = '*.ts,./coverage,./build,./dist*,./htmlcov,./*.spec,*.svg,./artisan_venv,../artisan_venv'
 count = ''
 quiet-level = 3
 ignore-words-list = 'Abd,ser,alog,nd,iterm,dout,te,commandi,dout,exitt,currenty,exaust,controle,coment,controle,outweight,everytime,sade,weightIn,weightin,Caf,caf'
